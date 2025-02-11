@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Calculator with Fractions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .calculator {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .display {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: right;
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #2d3436;
+            min-height: 80px;
+            width: 100%;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        button {
+            border: none;
+            padding: 15px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            background: #f0f4f5;
+            color: #2d3436;
+            width: 100%;
+        }
+
+        .operator {
+            background: #bbdefb;
+            color: #2d3436;
+        }
+
+        .equals {
+            background: #3f51b5;
+            color: white;
+            grid-column: span 2;
+            background: #3f51b5;
+        }
+
+        .clear {
+            background: #ef5350;
+            color: white;
+        }
+
+        .function {
+            background: #f0f4f5;
+            color: #2d3436;
+        }
+
+        .fraction {
+            background: #e8f0fe;
+            color: #2d3436;
+        }
+
+        .mixed-number {
+            position: relative;
+            top: 3px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 480px) {
+            .display {
+                font-size: 1.2rem;
+            }
+
+            button {
+                padding: 15px;
+                font-size: 1rem;
+            }
+
+            .function {
+                padding: 15px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">0</div>
+        <div class="buttons">
+            <div class="fraction-container">
+                <button onclick="calculator.showFractionInput()" class="fraction">Fraction</button>
+            </div>
+            <button class="clear" onclick="calculator.clear()">C</button>
+            <button class="operator" onclick="calculator.appendOperator('/')">÷</button>
+            <button class="operator" onclick="calculator.appendOperator('*')">×</button>
+            <button class="operator" onclick="calculator.appendOperator('-')">-</button>
+            <button onclick="calculator.appendNumber('7')">7</button>
+            <button onclick="calculator.appendNumber('8')">8</button>
+            <button onclick="calculator.appendNumber('9')">9</button>
+            <button class="operator" onclick="calculator.appendOperator('+')">+</button>
+            <button onclick="calculator.appendNumber('4')">4</button>
+            <button onclick="calculator.appendNumber('5')">5</button>
+            <button onclick="calculator.appendNumber('6')">6</button>
+            <button onclick="calculator.appendNumber('.')">.</button>
+            <button onclick="calculator.appendNumber('1')">1</button>
+            <button onclick="calculator.appendNumber('2')">2</button>
+            <button onclick="calculator.appendNumber('3')">3</button>
+            <button onclick="calculator.sqrt()">√</button>
+            <button onclick="calculator.appendNumber('0')" style="grid-column: span 2;">0</button>
+            <button onclick="calculator.appendNumber('00')">00</button>
+            <button onclick="calculator.pow(2)">x²</button>
+            <button onclick="calculator.customPow()">x^</button>
+            <button class="equals" onclick="calculator.calculate()">=</button>
+            <button class="fraction" onclick="calculator.toggleMixedNumber()" style="grid-column: span 2; background: #e8f0fe;">Mixed Number</button>
+            <button class="fraction" onclick="calculator.reduceFraction()">Simplify</button>
+            <button class="fraction" onclick="calculator.addFraction()">+</button>
+            <button class="fraction" onclick="calculator.subtractFraction()">-</button>
+            <button class="fraction" onclick="calculator.multiplyFraction()">×</button>
+            <button class="fraction" onclick="calculator.divideFraction()">÷</button>
+        </div>
+    </div>
+
+    <script>
+        class Calculator {
+            constructor() {
+                this.currentDisplay = '0';
+                this.equation = '';
+                this.result = 0;
+                this.isMixedNumber = false;
+                this.fraction1 = null;
+                this.fraction2 = null;
+            }
+
+            appendNumber(number) {
+                if (this.currentDisplay === '0') {
+                    this.currentDisplay = number.toString();
+                } else {
+                    this.currentDisplay += number.toString();
+                }
+                this.updateDisplay();
+            }
+
+            appendOperator(operator) {
+                this.equation = this.currentDisplay + ' ' + operator + ' ';
+                this.currentDisplay = '0';
+                this.updateDisplay();
+            }
+
+            clear() {
+                this.currentDisplay = '0';
+                this.equation = '';
+                this.fraction1 = null;
+                this.fraction2 = null;
+                this.updateDisplay();
+            }
+
+            sqrt() {
+                if (this.currentDisplay === '0') return;
+                try {
+                    const value = parseFloat(this.currentDisplay);
+                    this.result = Math.sqrt(value);
+                    this.currentDisplay = this.result.toString();
+                } catch (error) {
+                    this.currentDisplay = 'Error';
+                }
+                this.updateDisplay();
+            }
+
+            pow(exponent) {
+                if (this.currentDisplay === '0') return;
+                try {
+                    const value = parseFloat(this.currentDisplay);
+                    this.result = Math.pow(value, exponent);
+                    this.currentDisplay = this.result.toString();
+                } catch (error) {
+                    this.currentDisplay = 'Error';
+                }
+                this.updateDisplay();
+            }
+
+            customPow() {
+                const exponent = prompt('Enter the exponent:');
+                if (exponent === null) return;
+                try {
+                    const value = parseFloat(this.currentDisplay);
+                    this.result = Math.pow(value, parseFloat(exponent));
+                    this.currentDisplay = this.result.toString();
+                } catch (error) {
+                    this.currentDisplay = 'Error';
+                }
+                this.updateDisplay();
+            }
+
+            toggleMixedNumber() {
+                this.isMixedNumber = !this.isMixedNumber;
+                this.updateDisplay();
+            }
+
+            showFractionInput() {
+                const input = prompt('Enter fraction (numerator/denominator):');
+                if (input === null) return;
+                try {
+                    const [numerator, denominator] = input.split('/').map(Number);
+                    this.currentDisplay = `${numerator}/${denominator}`;
+                    this.updateDisplay();
+                } catch (error) {
+                    this.currentDisplay = 'Invalid fraction';
+                    this.updateDisplay();
+                }
+            }
+
+            reduceFraction() {
+                if (this.currentDisplay.includes('/')) {
+                    const [numerator, denominator] = this.currentDisplay.split('/').map(Number);
+                    const gcd = this.findGCD(numerator, denominator);
+                    const reducedNumerator = numerator / gcd;
+                    const reducedDenominator = denominator / gcd;
+                    this.currentDisplay = `${reducedNumerator}/${reducedDenominator}`;
+                    this.updateDisplay();
+                }
+            }
+
+            findGCD(a, b) {
+                while (b !== 0) {
+                    let temp = b;
+                    b = a % b;
+                    a = temp;
+                }
+                return a;
+            }
+
+            addFraction() {
+                this.fraction1 = this.currentDisplay;
+                this.currentDisplay = '0';
+                this.updateDisplay();
+            }
+
+            subtractFraction() {
+                this.fraction1 = this.currentDisplay;
+                this.currentDisplay = '0';
+                this.updateDisplay();
+            }
+
+            multiplyFraction() {
+                this.fraction1 = this.currentDisplay;
+                this.currentDisplay = '0';
+                this.updateDisplay();
+            }
+
+            divideFraction() {
+                this.fraction1 = this.currentDisplay;
+                this.currentDisplay = '0';
+                this.updateDisplay();
+            }
+
+            calculate() {
+                try {
+                    let result;
+                    if (this.fraction1) {
+                        const [f1Num, f1Den] = this.fraction1.split('/').map(Number);
+                        const [f2Num, f2Den] = this.currentDisplay.split('/').map(Number);
+                        this.fraction2 = this.currentDisplay;
+
+                        switch (this.equation) {
+                            case '+':
+                                result = {
+                                    numerator: f1Num * f2Den + f2Num * f1Den,
+                                    denominator: f1Den * f2Den
+                                };
+                                break;
+                            case '-':
+                                result = {
+                                    numerator: f1Num * f2Den - f2Num * f1Den,
+                                    denominator: f1Den * f2Den
+                                };
+                                break;
+                            case '*':
+                                result = {
+                                    numerator: f1Num * f2Num,
+                                    denominator: f1Den * f2Den
+                                };
+                                break;
+                            case '/':
+                                result = {
+                                    numerator: f1Num * f2Den,
+                                    denominator: f1Den * f2Num
+                                };
+                                break;
+                        }
+
+                        const gcd = this.findGCD(result.numerator, result.denominator);
+                        const reducedNumerator = result.numerator / gcd;
+                        const reducedDenominator = result.denominator / gcd;
+
+                        if (this.isMixedNumber && reducedDenominator !== 0) {
+                            const wholeNumber = Math.floor(reducedNumerator / reducedDenominator);
+                            const newNumerator = reducedNumerator % reducedDenominator;
+                            if (newNumerator === 0) {
+                                this.currentDisplay = wholeNumber.toString();
+                            } else {
+                                this.currentDisplay = `${wholeNumber} ${newNumerator}/${reducedDenominator}`;
+                            }
+                        } else {
+                            this.currentDisplay = `${reducedNumerator}/${reducedDenominator}`;
+                        }
+
+                        this.fraction1 = null;
+                        this.fraction2 = null;
+                    } else {
+                        this.currentDisplay = eval(this.equation + this.currentDisplay);
+                    }
+
+                    this.equation = '';
+                    this.updateDisplay();
+                } catch (error) {
+                    this.currentDisplay = 'Error';
+                    this.updateDisplay();
+                }
+            }
+
+            updateDisplay() {
+                document.querySelector('.display').textContent = this.currentDisplay;
+            }
+        }
+
+        const calculator = new Calculator();
+    </script>
+</body>
+</html>
